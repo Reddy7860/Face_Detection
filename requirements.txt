@@ -1,0 +1,11 @@
+Flask
+cv2
+pickle-mixin
+os-win==5.5.0 # Note: this might not be necessary, as `os` is part of Python's standard library
+base64==0.1.0 # Note: this might not be necessary, as `base64` is part of Python's standard library
+scikit-learn
+numpy==1.21.2
+csvkit==1.0.5 # Note: this might not be necessary, as `csv` is part of Python's standard library
+retinaface
+matplotlib
+deepface
