@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Captured Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 50px;
+            gap: 20px;
+        }
+        .image-card {
+            width: 150px;
+            background: #fff;
+            color: #000;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Captured Images</h2>
+    <div>
+        {% for image in images %}
+        <div class="image-card">
+            <img src="{{ url_for('send_image', filename=image) }}" alt="Captured image">
+            <p>{{ image.split('_')[0] }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

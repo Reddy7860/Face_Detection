@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Learning Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .btn {
+            padding: 15px 25px;
+            margin: 10px;
+            border: none;
+            background: #E50914;
+            color: #fff;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="startPrediction" class="btn">Start Prediction</button>
+    <button id="takeAttendance" class="btn">Take Attendance</button>
+    <canvas id="canvas" width="1280" height="480" ></canvas> <!-- Adjusted canvas size -->
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const startPredictionButton = document.getElementById('startPrediction');
+        const takeAttendanceButton = document.getElementById('takeAttendance');
+
+        // Access the webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => console.error(err));
+
+        startPredictionButton.addEventListener('click', async () => {
+            context.drawImage(video, 0, 0, video.width, video.height);   // Draw on the left half
+            context.drawImage(video, video.width, 0, video.width, video.height);  // Draw on the right half
+            const imageData = canvas.toDataURL('image/png');
+
+            const response = await fetch('/ml_prediction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `image=${encodeURIComponent(imageData)}`
+            });
+            const predictions = await response.json();
+
+            // Draw bounding boxes and labels for KNearestNeighbours predictions on the left half
+            predictions.knn.forEach(prediction => {
+                const [x, y, w, h] = prediction.box;
+                context.strokeStyle = 'red';
+                context.lineWidth = 2;
+                context.strokeRect(x, y, w, h);
+                context.fillStyle = 'red';
+                context.font = '18px Arial';
+                context.fillText(prediction.name, x, y > 20 ? y - 5 : y + 20);
+            });
+
+            // Draw bounding boxes and labels for RetinaFace predictions on the right half
+            predictions.retinaface.forEach(prediction => {
+                const [x, y, w, h] = prediction.box;
+                context.strokeStyle = 'blue';
+                context.lineWidth = 2;
+                context.strokeRect(x + video.width, y, w, h);  // Offset by video width
+                context.fillStyle = 'blue';
+                context.font = '18px Arial';
+                context.fillText(prediction.name, x + video.width, y > 20 ? y - 5 : y + 20);
+            });
+        });
+
+        takeAttendanceButton.addEventListener('click', () => {
+            // TODO: Take attendance based on the current prediction. Send a request to the backend to save the prediction to CSV.
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!-- Save this as new_user.html in the templates directory -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .btn {
+            padding: 15px 25px;
+            margin: 10px;
+            border: none;
+            background: #E50914;
+            color: #fff;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="captureButton" class="btn">Capture</button>
+    <form id="captureForm" action="/capture" method="post" enctype="multipart/form-data">
+        <label for="name">Candidate Name:</label>
+        <input type="text" id="name" name="name" required>
+        <input type="submit" value="Submit Captured Photos" class="btn">
+    </form>
+    <script>
+        const video = document.getElementById('video');
+        const captureButton = document.getElementById('captureButton');
+        const captureForm = document.getElementById('captureForm');
+        let capturedImages = [];
+        
+        // Access the webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => console.error(err));
+        
+        
+        // Capture images
+        captureButton.addEventListener('click', () => {
+            let captures = 0;
+            const captureInterval = setInterval(() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                capturedImages.push(canvas.toDataURL('image/png'));
+                captures++;
+                if (captures >= 5) {
+                    clearInterval(captureInterval);
+                    alert('5 images captured!');
+                }
+            }, 1000); // Capture an image every 1 second
+        });
+
+        // });
+
+        // On form submission
+        captureForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            capturedImages.forEach((imgData, index) => {
+                formData.append(`image${index}`, imgData);
+            });
+
+            fetch('/capture', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            });
+        });
+    </script>
+</body>
+</html>
